@@ -1,0 +1,114 @@
+repositories {
+    maven {
+        url "http://mvnrepo.taobao.ali.com/mvn/repository"
+    }
+    maven {
+        url "http://mvnrepo.taobao.ali.com/mvn/snapshots"
+    }
+    jcenter()
+}
+
+buildscript {
+    repositories {
+        maven {
+            url "http://mvnrepo.taobao.ali.com/mvn/repository"
+        }
+        maven {
+            url "http://mvnrepo.taobao.ali.com/mvn/snapshots"
+        }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.+'
+
+    }
+}
+
+//apply plugin: 'android-library'
+apply plugin: 'android'
+apply plugin: 'idea'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.1.0"
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            resources.srcDirs = ['bin']
+            aidl.srcDirs = ['src']
+            renderscript.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+
+//    signingConfigs {
+//        release {
+//            storeFile file('release.jks')
+//            storePassword "passwd"
+//            keyAlias "key"
+//            keyPassword "passwd"
+//        }
+//    }
+//
+//    productFlavors {
+//        flavor1 {
+//            signingConfig signingConfigs.release
+//        }
+//        flavor2 {
+//            signingConfig signingConfigs.release
+//        }
+//    }
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 19
+    }
+
+}
+
+dependencies {
+    compile 'com.google.android:support-v4:r19.1'
+}
+
+apply from: 'gradle-mvn-push.gradle'
+
+def changeValue(value) {
+    def path = "${projectDir}/res/values/strings.xml"
+    def configXml = new XmlParser().parse(path)
+    def nodes = configXml.findAll { it.@name == "gradle" }
+    if (nodes != null && nodes.size() > 0) {
+        nodes.get(0).value = value
+    }
+    new XmlNodePrinter(new PrintWriter(path)).print(configXml)
+}
+
+android.applicationVariants.all { variant ->
+//    change11("do" + variant.name)
+    variant.processResources.doLast {
+        changeValue("111" + System.currentTimeMillis())
+    }
+}
+
+
+idea {
+    module {
+        sourceDirs += file('src2')
+        iml {
+            generateTo = file("src2")
+            withXml {
+                generateTo file(bin)
+                def node = it.asNode()
+                node.appendNode('iLoveGradle', 'true')
+                node.appendNode('butAlso', 'I find increasing pleasure tinkering with output *.iml contents. Yeah!!!')
+            }
+            whenMerged { module ->
+                print module.sourceFolders
+            }
+        }
+    }
+}
+
+

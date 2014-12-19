@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.example.myapp.SmoothScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/test1"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:text="1111"
+                android:background="#00ff00"/>
+
+            <com.example.myapp.SmoothListView
+                android:id="@+id/listview"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+            <!--<TextView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="200dp"-->
+                <!--android:text="555"-->
+                <!--android:background="#0000ff"/>-->
+
+            <!--<TextView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="300dp"-->
+                <!--android:text="333"-->
+                <!--android:background="#ff3800"/>-->
+
+            <!--<TextView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="300dp"-->
+                <!--android:text="555"-->
+                <!--android:background="#00ff00"/>-->
+
+        </LinearLayout>
+
+    </com.example.myapp.SmoothScrollView>
+
+</LinearLayout>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.example.myapp.BounceScrollview
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/test1"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#00ff00"
+                android:text="1111" />
+
+            <TextView
+                android:id="@+id/test2"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#ff3800"
+                android:text="2222" />
+
+            <TextView
+                android:id="@+id/test3"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#ff00ff"
+                android:text="3333" />
+
+            <TextView
+                android:id="@+id/test4"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#00f"
+                android:text="4444" />
+
+        </LinearLayout>
+
+    </com.example.myapp.BounceScrollview>
+
+</LinearLayout>
