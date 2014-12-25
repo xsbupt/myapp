@@ -2,9 +2,11 @@ package com.example.myapp;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.widget.OverScroller;
 import android.widget.ScrollView;
 
@@ -32,6 +34,16 @@ public class SmoothScrollView extends ScrollView {
 
     private boolean isOver = false;
 
+    // scrollview不可滑动
+    private boolean mDisable = false;
+
+    // 开始进行scrollview嵌套listview的代码的开发工作
+    private int mTouchSlop;
+
+    private int mLastMotionY;
+
+    private int mActivePointerId = -1;
+
     public SmoothScrollView(Context context) {
         this(context, null);
     }
@@ -52,6 +64,10 @@ public class SmoothScrollView extends ScrollView {
 
     private void initView() {
 
+        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
+        mTouchSlop = configuration.getScaledTouchSlop();
+
+
         mSelftScroller = new OverScroller(getContext());
 
         try {
@@ -69,14 +85,111 @@ public class SmoothScrollView extends ScrollView {
             field.setAccessible(true);
             mPaddingTop = (Integer) field.get(this);
         } catch (Exception e) {
-
         }
     }
 
+//    private OnTouchListener mOnTouchListener = new OnTouchListener() {
+//        private int mLastY = 0;
+//
+//        @Override
+//        public boolean onTouch(View v, MotionEvent event) {
+//            final int action = event.getAction();
+//            switch (action & MotionEvent.ACTION_MASK) {
+//                case MotionEvent.ACTION_DOWN:
+//                    mLastY = (int) event.getY();
+//                    break;
+//                case MotionEvent.ACTION_MOVE:
+//                    final int y = (int) event.getY();
+//                    int deltaY = mLastMotionY - y;
+//                    boolean isSrollDown = false;
+//                    if (Math.abs(deltaY) > mTouchSlop) {
+//                        if (deltaY > 0) {
+//                            isSrollDown = true;
+//                        } else {
+//                            isSrollDown = false;
+//                        }
+//                    }
+//            }
+//
+//
+//            return false;
+//        }
+//    };
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        final int action = ev.getAction();
+        switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                mLastMotionY = (int) ev.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                final int y = (int) ev.getY();
+                int deltaY = mLastMotionY-y;
+                boolean isSrollDown = false;
+                if (Math.abs(deltaY) > mTouchSlop) {
+                    if (deltaY > 0) {
+                        deltaY -= mTouchSlop;
+                        isSrollDown = true;
+                    } else {
+                        deltaY += mTouchSlop;
+                        isSrollDown = false;
+                    }
+
+                    mLastMotionY = y;
+                    if (!isSrollDown) {
+                        // 从下往上滑，同时listview不能继续滑动
+                        if (!mListView.canScrollList(-1)) {
+                            mInterupt = true;
+                            mDisable = false;
+                        } else {
+                            mDisable = true;
+                            mListView.dispatchTouchEvent(ev);
+                        }
+                    } else {
+                        // 从上往下滑，同时scrollview不能继续滑动
+                        if (!canScrollDown(1)) {
+                            if (mInterupt) {
+                                MotionEvent event = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, ev.getX(), ev.getY(), 0);
+                                mListView.dispatchTouchEvent(event);
+                            }
+                            mInterupt = false;
+                            mListView.dispatchTouchEvent(ev);
+                            mDisable = true;
+                        } else {
+                            mInterupt = true;
+                            mDisable = false;
+                        }
+                    }
+                }
+                break;
+        }
+
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mDisable) {
+            return true;
+        } else {
+            return super.onTouchEvent(ev);
+        }
+    }
+
+    private boolean canScrollDown(int direction) {
+        final int offset = computeVerticalScrollOffset();
+        final int range = computeVerticalScrollRange() - computeVerticalScrollExtent();
+        if (range == 0) return false;
+        if (direction < 0) {
+            return offset >= 0;
+        } else {
+            return offset < range;
+        }
+    }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.v("xs", "top--->" + mListView.getTop());
         return mInterupt;
     }
 
@@ -96,16 +209,9 @@ public class SmoothScrollView extends ScrollView {
 
             isOver = false;
 
-
-            Log.v("xs", "fling---->" + mScroller.getFinalY() + "--->" + mSelftScroller.getFinalY());
-
-//            if (mFlingStrictSpan == null) {
-//                mFlingStrictSpan = StrictMode.enterCriticalSpan("ScrollView-fling");
-//            }
             postInvalidateOnAnimation();
         }
     }
-
 
     @Override
     public void computeScroll() {
@@ -139,30 +245,16 @@ public class SmoothScrollView extends ScrollView {
                         final boolean canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                                 (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
-                        Log.v("xs", "one---->" + getScrollX() + "---->" + getScrollY());
-
                         overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range,
                                 0, mOverflingDistance, false);
-
-                        Log.v("xs", "tow---->" + getScrollX() + "---->" + getScrollY());
-
                         onScrollChanged(getScrollX(), getScrollY(), oldX, oldY);
 
-                        //Log.v("xs", "range--->" + range + "---->" + x + "---->" + y + "---->" + getHeight() + "---->" + mScroller.getFinalY() + "---->" + mSelftScroller.getCurrY());
-
-                        if (y >= range) {
+                        if (getScrollY() >= range) {
                             isOver = true;
-                            Log.v("xs", "isover--->" + true);
+                            mScroller.forceFinished(true);
+                            mScroller.abortAnimation();
+//                            Log.v("xs", "isover--->" + true);
                         }
-
-                        if (y == range) {
-                            //mInterupt = false;
-                            Log.v("xs", "I am here");
-                        } else {
-                            mInterupt = true;
-                        }
-
-
                     }
 
                     if (!awakenScrollBars()) {
@@ -173,9 +265,13 @@ public class SmoothScrollView extends ScrollView {
 
                 if (mSelftScroller.computeScrollOffset() && isOver) {
                     int y = mSelftScroller.getCurrY();
-                    mInterupt = false;
+                    if (mInterupt) {
+                        mListView.setScroller(mSelftScroller);
+                        mInterupt = false;
+                        Log.v("xs", "I am going to break throw");
+                    }
+//                    Log.v("xs", "start to call listview---->" + y);
 //                    mAdater.notifyDataSetChanged();
-                    boolean foucus = mListView.requestFocusFromTouch();
 //                    Log.v("xs", "self--->" + y + "---->" + foucus);
 //                    mListView.scrollTo(0, y - 600);
                     if (mScroller.isFinished()) {
@@ -183,10 +279,8 @@ public class SmoothScrollView extends ScrollView {
                     }
 
                     //mAdater.notifyDataSetChanged();
-                    //mListView.setScroller(mSelftScroller);
+//                    mListView.setScroller(mSelftScroller);
                     //mListView.notifyChange();
-
-                    Log.v("xs", "I am start to listview");
                 }
             }
         } catch (Exception e) {

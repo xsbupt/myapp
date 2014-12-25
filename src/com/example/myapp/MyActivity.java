@@ -53,9 +53,10 @@ public class MyActivity extends Activity {
                     int viewWidth = mScrollView.getWidth();
                     int viewHeight = mScrollView.getHeight();
                     mListView.getLayoutParams().height = viewHeight;
-                    Log.v("xs", "view---->" + viewHeight + "--->" + viewWidth);
+                    mListView.setScrollView(mScrollView);
+                    Log.v("xs", "height---->" + viewHeight + "--->" + viewWidth);
 //                    mListView.scrollBy(0, 100);
-                    mListView.setSelection(5);
+//                    mListView.setSelection(5);
                 }
             });
         }
